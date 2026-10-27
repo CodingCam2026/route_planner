@@ -2,6 +2,7 @@ import tkinter as tk
 from pathlib import Path
 from tkwry import WebView
 import folium
+import customtkinter as ct
 
 class MapCreation:
     """Class for creating, displaying and the map"""
@@ -15,27 +16,47 @@ class MapCreation:
         map = folium.Map(location=current_lat_long)
         map.save(f"{map_name}.html")
         return map
+    
+    def create_map_container(self):
+        """Creates the map container"""
+        # Container for map and toolbar
+        self.map_container = ct.CTkFrame(
+            self.root,
+            fg_color="transparent"
+        )
+
+        self.map_container.grid(
+            row=0,
+            column=1,
+            rowspan=4,
+            sticky="nsew",
+            padx=10,
+            pady=10
+        )
+
+        # Configure container grid
+        self.map_container.grid_columnconfigure(0, weight=1)
+        self.map_container.grid_rowconfigure(1, weight=1)
+
+        
             
             
     def display_map_from_path(self,map_path):
         """Displays the folium map from the map path"""
-        self.root.grid_columnconfigure(1, weight=1)
-        self.root.grid_rowconfigure(0, weight=1)
-
-        # Make map frame
+        # Configure root grid
+        # Create map frame inside container
         self.map_frame = tk.Frame(
-            self.root,
+            self.map_container,
             width=800,
             height=600,
             bg="lightblue"
         )
+
         self.map_frame.grid(
-            row=0,
-            column=1,
-            rowspan=3,
+            row=1,
+            column=0,
             sticky="nsew",
-            padx=10,
-            pady=10
+            pady=(5, 0)
         )
 
         self.map_frame.grid_propagate(False)
@@ -70,7 +91,7 @@ class MapCreation:
         self._create_route_lines(route_list,calculated_route_map)
             
         # Save map
-        map_name = "new_map.html"
+        map_name = "html_maps/new_map.html"
         calculated_route_map.save(map_name)
         self.display_map_from_path(map_name)
         self.gui_main.return_combobox_focus()
@@ -87,7 +108,7 @@ class MapCreation:
                     folium.Marker(
                             location=(coord[0],coord[1]),
                             tooltip=f"Stop {job_number}",
-                            popup="Helo",
+                            popup=[i for i in address.items()][job_number-1][1],
                             icon=folium.Icon(icon="home",color="blue"),
                         ).add_to(calculated_route_map)
                     job_number += 1
@@ -104,7 +125,7 @@ class MapCreation:
                 folium.Marker(
                     location=(coords[0],coords[1]),
                     tooltip=stop,
-                    popup="Helo",
+                    popup=address,
                     icon=folium.Icon(icon="home",color=color),
                 ).add_to(calculated_route_map)
     

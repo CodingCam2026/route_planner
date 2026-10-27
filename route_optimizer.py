@@ -58,6 +58,7 @@ class RouteOptimizer:
         
         start_coords = route_list[0]
         end_coords = route_list[-1]
+        
         return start_coords,additional_stops,end_coords
         
     def send_request(self,route_list):

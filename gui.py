@@ -2,11 +2,14 @@
 from widget_toolkit.widget_factory import CreateWidgets
 import customtkinter as ct
 import asyncio
-from winsdk.windows.devices.geolocation import Geolocator, PositionAccuracy
+#from winsdk.windows.devices.geolocation import Geolocator, PositionAccuracy
 from gui_commands import GUICommands
 from map_creation import MapCreation
 from gui_colours.gui_colours import GUIColours
 from PIL import Image
+from calendar_popup.gui_calendar_popup import CalendarPopup
+from share_route_popup.gui_share_popup import SharePopup
+import json
 
 
 class Fonts:
@@ -14,36 +17,42 @@ class Fonts:
     def __init__(self):
         self.route_entry_font = ct.CTkFont(family="Arial",size=30)
         self.total_route_detail_font = ct.CTkFont(family="Arial",size=36)
+        
+        self.calendar_event_font = ct.CTkFont(family="Arial", size = 20)
 
 
 class GUIMain:
     """Class for running the gui"""
     def __init__(self):
         """"""
+        self.gui_colours = GUIColours()
         self.create_widgets = CreateWidgets()
+        self.calendar_popup = CalendarPopup(self)
+        self.share_popup = SharePopup(self)
         self.gui_commands = GUICommands(self)
+        
         
         
     
     def get_current_lat_long(self):
-        """Gets the current latitude and longitude using Windows location services."""
+        """Gets the current latitude and longitude using the default_postcode from the config.json."""
 
-        async def get_position():
-            locator = Geolocator()
-            locator.desired_accuracy = PositionAccuracy.HIGH
+        file = "json/config.json"
+        with open(file = file, mode = "r") as f:
+            postcode = json.load(f)["default_postcode"]
 
-            position = await locator.get_geoposition_async()
-
-            latitude = position.coordinate.point.position.latitude
-            longitude = position.coordinate.point.position.longitude
-
-            return latitude, longitude
-
-        try:
-            return asyncio.run(get_position())
-
-        except Exception as e:
-            print(f"Error getting location: {e}")
+        location = self.gui_commands.geocode(
+            postcode,
+            country_codes="gb",
+            exactly_one=True,
+            addressdetails=True
+        )
+        if location:
+            
+            return location.latitude,location.longitude
+        else:
+            print(f"NO LOCATION FOUND FROM POSTCODE {postcode}")
+            print("Check config.json")
             return None
 
     
@@ -87,14 +96,61 @@ class GUIMain:
     def run_gui(self):
         """Runs the gui"""
         self.root = ct.CTk()
-        self.gui_colours = GUIColours()
+        
         self.map_creation = MapCreation(self)
-        map_location = "starting_map"
+        map_location = "html_maps/starting_map"
+        self.map_creation.create_map_container()
         self.map_creation.create_map_from_location(self.get_current_lat_long(),map_location)
         
         self.fonts = Fonts()
         self.map_creation.display_map_from_path(f"{map_location}.html")
+        self.route_details = None
+        
+        # Frame to hold the calendar and share buttons
+        self.map_button_frame = ct.CTkFrame(
+            self.map_creation.map_container,
+            fg_color="transparent"
+        )
 
+        self.map_button_frame.grid(
+            row=0,
+            column=0,
+            sticky="nw",
+            padx=0,
+            pady=0
+        )
+        
+        button_image = ct.CTkImage(
+            light_image=Image.open("images/import_from_calendar_icon.png"),
+            dark_image=Image.open("images/import_from_calendar_icon.png"),
+            size=(40,40)
+        )
+        self.calendar_button = self.create_widgets.create_ct_button(
+            master=self.map_button_frame,
+            grid_position=(0, 0),
+            text="",
+            sticky = "w", command = self.gui_commands.calendar_popup_command,
+            image = button_image, width = 50,
+            fg_color = self.gui_colours.secondary_button,hover_color = self.gui_colours.secondary_button_hover,
+            text_color = self.gui_colours.primary_text
+        )
+        
+        button_image = ct.CTkImage(
+            light_image=Image.open("images/share_route_icon.png"),
+            dark_image=Image.open("images/share_route_icon.png"),
+            size=(40,40)
+        )
+        self.share_route_button = self.create_widgets.create_ct_button(
+            master=self.map_button_frame,
+            grid_position=(0, 1),
+            text="",
+            sticky = "w", command = self.share_popup.run_share_popup,
+            image = button_image, width = 50,
+            fg_color = self.gui_colours.secondary_button,hover_color = self.gui_colours.secondary_button_hover,
+            text_color = self.gui_colours.primary_text,padx=10
+        )
+       
+       
         self.root.configure(fg_color=self.gui_colours.primary_background)
         self.route_listbox = self.create_widgets.create_ct_scrollable_frame(
             master = self.root, grid_position = (0,0),height=600,width =500,
@@ -108,11 +164,12 @@ class GUIMain:
         # Start Entry
         self.start_entry = self.create_stop_entry(placeholder_text="Start",grid=(0,0))
         self.start_search_address_button = self._create_search_address_button(grid = (0,1),combobox=self.start_entry)
-      
+        self.start_entry.set("DY11 6EU")
         # Stop Entry
         self.end_entry = self.create_stop_entry(placeholder_text="End",grid=(1,0))
         self.end_search_address_button = self._create_search_address_button(grid = (1,1),combobox=self.end_entry)
-    
+        self.end_entry.set("DY11 6EU")
+        
         button_frame = self.create_widgets.create_ct_frame(
             master = self.root,grid_position = (1,0),
             fg_color = self.gui_colours.primary_background

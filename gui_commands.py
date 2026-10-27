@@ -3,7 +3,8 @@ from geopy.extra.rate_limiter import RateLimiter
 from route_optimizer import RouteOptimizer
 import customtkinter as ct
 from PIL import Image
-import tkinter
+
+
 
 class GUICommands:
     """Class for managing the gui commands"""
@@ -11,6 +12,8 @@ class GUICommands:
         self.gui_main = gui_main
         self.create_widgets = self.gui_main.create_widgets
         self.route_optimizer = RouteOptimizer()
+        self.calendar_popup = self.gui_main.calendar_popup
+        
         
         geolocator = Nominatim(
             user_agent="route_planner",
@@ -23,7 +26,7 @@ class GUICommands:
         )
         
 
-    def add_stop_command(self):
+    def add_stop_command(self,place_holder_text = "Additonal Stop"):
         """Command for adding a entry widget for an addiontal stop"""
         # Configures the row to place after addiotnal stop and before end stop
         route_widgets = self.gui_main.route_listbox.winfo_children()
@@ -32,7 +35,7 @@ class GUICommands:
         i = max(route_widgets_coords)[0]
         
         # Create additional stop widgets 
-        entry_stop = self.gui_main.create_stop_entry(placeholder_text=f"Additonal Stop",grid=(i,0))
+        entry_stop = self.gui_main.create_stop_entry(placeholder_text=place_holder_text,grid=(i,0))
         search_address_button = self.gui_main._create_search_address_button(grid = (i,1),combobox = entry_stop)
         button_image = ct.CTkImage(
                     light_image=Image.open("images/remove_stop_icon.png"),
@@ -170,7 +173,17 @@ class GUICommands:
                 address_dict["end"] = matched_location[1]
                 
         self._order_uncalculated_comboboxes(route_widgets,address_dict)
+        #print(address_dict)
         
         return address_dict
-            
+    
+    def calendar_popup_command(self):
+        """Command for running the popup for the calendar"""
+        self.calendar_popup.popup()
+        # Make calendar
+        
+        
+        # get events
+        
+        
     

@@ -1,0 +1,25 @@
+# Route Planner - Python dependencies
+# Desktop GUI
+customtkinter
+tkcalendar
+Pillow
+
+# Interactive mapping and embedded browser
+folium
+pywebview
+
+# Windows geolocation
+#winsdk
+
+# Google Calendar integration
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+
+# Common HTTP/geocoding support (keep only if imported in your source)
+requests
+geopy
+openrouteservice
+dotenv
+tkwry
+#icalendar
